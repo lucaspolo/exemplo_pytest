@@ -6,7 +6,7 @@ class TestPessoaRepository:
     def pessoa_repository(self, db_conn):
         return PessoaRepository(db_conn)
 
-    def test_criar_pessoa(self, pessoa_repository):
+    def test_criar_pessoa(self, pessoa_repository, kafka_bootstrap):
         data = {
             "nome": "Maria Clara dos Santos",
             "cpf": "123.456.789-09",

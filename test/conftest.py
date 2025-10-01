@@ -4,9 +4,11 @@ import pathlib
 import psycopg2
 import pytest
 from testcontainers.postgres import PostgresContainer
+from testcontainers.kafka import RedpandaContainer
 from yoyo import get_backend, read_migrations
 
 POSTGRES_IMAGE = "postgres:18"  # versão fixada
+REDPANDA_IMAGE = "redpandadata/redpanda:v25.2.6" 
 MIGRATIONS_DIR = pathlib.Path(__file__).parent.parent / "migrations"
 
 
@@ -47,3 +49,11 @@ def db_conn(pg_url):
         yield conn
     finally:
         conn.close()
+
+
+@pytest.fixture(scope="session")
+def kafka_bootstrap():
+    # Sobe o Kafka num container e retorna o bootstrap servers
+    with RedpandaContainer(REDPANDA_IMAGE) as redpanda:
+        bs = redpanda.get_bootstrap_server()        
+        yield bs
