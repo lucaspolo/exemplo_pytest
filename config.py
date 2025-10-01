@@ -11,3 +11,22 @@ DATABASE_CONFIG = {
 
 # String de conexão
 DSN = "host={host} port={port} dbname={database} user={user} password={password}".format(**DATABASE_CONFIG)
+
+# Kafka configuration
+KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
+KAFKA_CONSUMER_TOPIC = "input-topic"
+KAFKA_GROUP_ID = "test-group"
+KAFKA_PRODUCER_TOPIC = "output-topic"
+
+# Consumer configuration
+CONSUMER_CONFIG = {
+    "bootstrap_servers": KAFKA_BOOTSTRAP_SERVERS,
+    "auto_offset_reset": "earliest",
+    "enable_auto_commit": True,
+    "group_id": KAFKA_GROUP_ID
+}
+
+# Producer configuration
+PRODUCER_CONFIG = {
+    "bootstrap_servers": KAFKA_BOOTSTRAP_SERVERS
+}
