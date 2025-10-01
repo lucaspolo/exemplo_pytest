@@ -1,10 +1,51 @@
 
+from unittest import mock
+from unittest.mock import MagicMock
 import pytest
 from messaging import create_consumer, create_producer
 import config
 from processor import Processor
 from repository.pessoa import PessoaRepository
-from test.conftest import kafka_bootstrap
+
+
+def test_processor_should_recieve_message_and_persist():
+    db_conn = MagicMock()
+    message = MagicMock()
+    message.value = {
+        "nome": "Maria Clara dos Santos",
+        "cpf": "123.456.789-09",
+        "rg": "12.345.678-9",
+        "data_de_nascimento": "1990-05-17",
+        "telefones": [
+            {
+                "tipo": "celular",
+                "ddi": "+55",
+                "ddd": "21",
+                "numero": "99876-5432",
+                "ramal": None,
+                "whatsapp": True,
+                "principal": True,
+            },
+        ],
+    }
+    consumer = [message]
+
+    with mock.patch("processor.PessoaRepository") as MockPessoaRepository:
+        mock_repo_instance = MockPessoaRepository.return_value
+        mock_repo_instance.inserir_pessoa = MagicMock()
+        processor = Processor(
+            db_conn=db_conn,
+            consumer=consumer,
+            max_messages=1,
+        )
+
+        processor.start()
+
+        assert mock_repo_instance.inserir_pessoa.call_count == 1
+        mock_repo_instance.inserir_pessoa.assert_called_with(message.value)
+
+
+# =================== TESTES INTEGRADOS ========================
 
 @pytest.fixture
 def producer_to_input(kafka_bootstrap):
@@ -123,7 +164,7 @@ def test_processor_should_produce_in_output_topic(
 
     # Adiciona timeout para evitar travamento
     import time
-    timeout = time.time() + 10  # 10 segundos de timeout
+    timeout = time.time() + 1  # 1 segundo de timeout
     
     try:
         for msg in consumer_from_output:
