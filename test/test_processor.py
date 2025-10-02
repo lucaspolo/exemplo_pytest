@@ -8,10 +8,10 @@ from processor import Processor
 from repository.pessoa import PessoaRepository
 
 
-def test_processor_should_recieve_message_and_persist():
-    db_conn = MagicMock()
-    message = MagicMock()
-    message.value = {
+
+@pytest.fixture
+def payload():
+    return {
         "nome": "Maria Clara dos Santos",
         "cpf": "123.456.789-09",
         "rg": "12.345.678-9",
@@ -28,21 +28,32 @@ def test_processor_should_recieve_message_and_persist():
             },
         ],
     }
-    consumer = [message]
 
+
+@pytest.fixture
+def mock_pessoa_repository_instance():
     with mock.patch("processor.PessoaRepository") as MockPessoaRepository:
         mock_repo_instance = MockPessoaRepository.return_value
-        mock_repo_instance.inserir_pessoa = MagicMock()
-        processor = Processor(
-            db_conn=db_conn,
-            consumer=consumer,
-            max_messages=1,
-        )
+        yield mock_repo_instance
 
-        processor.start()
 
-        assert mock_repo_instance.inserir_pessoa.call_count == 1
-        mock_repo_instance.inserir_pessoa.assert_called_with(message.value)
+def test_processor_should_recieve_message_and_persist(payload, mock_pessoa_repository_instance):
+    db_conn = MagicMock()
+    message = MagicMock()
+    message.value = payload
+    consumer = [message]
+
+    mock_pessoa_repository_instance.inserir_pessoa = MagicMock()
+    processor = Processor(
+        db_conn=db_conn,
+        consumer=consumer,
+        max_messages=1,
+    )
+
+    processor.start()
+
+    assert mock_pessoa_repository_instance.inserir_pessoa.call_count == 1
+    mock_pessoa_repository_instance.inserir_pessoa.assert_called_with(message.value)
 
 
 # =================== TESTES INTEGRADOS ========================
